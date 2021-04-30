@@ -61,7 +61,7 @@
     "components-helper": "^1.0.2",
     "cp-cli": "^2.0.0",
     "cross-env": "^7.0.2",
-    "css-loader": "^4.2.2",
+    "css-loader": "^5.2.4",
     "css-minimizer-webpack-plugin": "^1.1.5",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^7.7.0",
