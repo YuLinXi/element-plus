@@ -188,8 +188,7 @@ El checkbox de un nodo se puede poner como desactivado.
 <el-tree
   :data="data"
   :props="defaultProps"
-  show-checkbox
-  @check-change="handleCheckChange">
+  show-checkbox>
 </el-tree>
 
 <script>
@@ -421,23 +420,21 @@ El contenido de los nodos puede ser personalizado, así que puede añadir iconos
       node-key="id"
       default-expand-all
       :expand-on-click-node="false">
-      <span class="custom-tree-node" slot-scope="{ node, data }">
-        <span>{{ node.label }}</span>
-        <span>
-          <el-button
-            type="text"
-            size="mini"
-            @click="() => append(data)">
-            Append
-          </el-button>
-          <el-button
-            type="text"
-            size="mini"
-            @click="() => remove(node, data)">
-            Delete
-          </el-button>
+      <template #default="{ node, data }">
+        <span class="custom-tree-node">
+          <span>{{ node.label }}</span>
+          <span>
+            <a
+              @click="append(data)">
+              Append
+            </a>
+            <a
+              @click="remove(node, data)">
+              Delete
+            </a>
+          </span>
         </span>
-      </span>
+      </template>
     </el-tree>
   </div>
 </div>
@@ -484,7 +481,6 @@ El contenido de los nodos puede ser personalizado, así que puede añadir iconos
       }];
       return {
         data: JSON.parse(JSON.stringify(data)),
-        data: JSON.parse(JSON.stringify(data))
       }
     },
 
@@ -492,9 +488,10 @@ El contenido de los nodos puede ser personalizado, así que puede añadir iconos
       append(data) {
         const newChild = { id: id++, label: 'testtest', children: [] };
         if (!data.children) {
-          this.$set(data, 'children', []);
+          data.children = []
         }
         data.children.push(newChild);
+        this.data = [...this.data]
       },
 
       remove(node, data) {
@@ -502,20 +499,17 @@ El contenido de los nodos puede ser personalizado, así que puede añadir iconos
         const children = parent.data.children || parent.data;
         const index = children.findIndex(d => d.id === data.id);
         children.splice(index, 1);
+        this.data = [...this.data]
       },
 
       renderContent(h, { node, data, store }) {
         return h("span", {
-            class: "custom-tree-node"
-          }, h("span", null, node.label), h("span", null, h("el-button", {
-            size: "mini",
-            type: "text",
-            "on-click":this.append(data)
-          }, "Append"), h("el-button", {
-            size: "mini",
-            type: "text",
-            "on-click": this.remove(node, data)
-          }, "Delete")));
+          class: "custom-tree-node"
+        }, h("span", null, node.label), h("span", null, h("a", {
+          onClick: () => this.append(data)
+        }, "Append "), h("a", {
+          onClick: () => this.remove(node, data)
+        }, "Delete")));
       }
     }
   };
@@ -838,8 +832,8 @@ Puede arrastrar y soltar nodos de Tree añadiendo un atributo `draggable` .
 | getHalfCheckedKeys | Si el nodo puede ser seleccionado (`show-checkbox` es `true`), devuelve la mitad del array de claves del nodo actualmente seleccionado. | - |
 | getCurrentKey     | devuelve la clave del nodo resaltado actualmente (null si no hay ninguno) | —                                        |
 | getCurrentNode    | devuelve los datos del nodo de resaltado (nulo si no hay ningún nodo resaltado) | —                                        |
-| setCurrentKey     | establece el nodo resaltado por la clave, solo funciona si `node-key` está asignado | (key) la clave del nodo a ser resaltado. Si es `null`, cancela los nodos actualmente resaltados |
-| setCurrentNode    | establece el nodo resaltado, solo funciona si `node-key` está asignado | (node) nodo a ser resaltado              |
+| setCurrentKey     | establece el nodo resaltado por la clave, solo funciona si `node-key` está asignado | (key, shouldAutoExpandParent=true) 1. la clave del nodo a ser resaltado. Si es `null`, cancela los nodos actualmente resaltados 2. whether to automatically expand parent node |
+| setCurrentNode    | establece el nodo resaltado, solo funciona si `node-key` está asignado | (node, shouldAutoExpandParent=true) 1. nodo a ser resaltado 2. whether to automatically expand parent node |
 | getNode         | devuelve el nodo por el dato o la clave | (data) los datos o clave del nodo |
 | remove          | elimina un nodo, solo funciona si `node-key` está asignado  | (data) los datos del nodo o nodo a borrar |
 | append          | añadir un nodo hijo a un nodo determinado del árbol | (data, parentNode) 1. los datos del nodo hijo que se añadirán 2. los datos del nodo padre, clave o nodo |

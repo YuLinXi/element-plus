@@ -188,8 +188,7 @@ The checkbox of a node can be set as disabled.
 <el-tree
   :data="data"
   :props="defaultProps"
-  show-checkbox
-  @check-change="handleCheckChange">
+  show-checkbox>
 </el-tree>
 
 <script>
@@ -421,23 +420,21 @@ The content of tree nodes can be customized, so you can add icons or buttons as 
       node-key="id"
       default-expand-all
       :expand-on-click-node="false">
-      <span class="custom-tree-node" slot-scope="{ node, data }">
-        <span>{{ node.label }}</span>
-        <span>
-          <el-button
-            type="text"
-            size="mini"
-            @click="() => append(data)">
-            Append
-          </el-button>
-          <el-button
-            type="text"
-            size="mini"
-            @click="() => remove(node, data)">
-            Delete
-          </el-button>
+      <template #default="{ node, data }">
+        <span class="custom-tree-node">
+          <span>{{ node.label }}</span>
+          <span>
+            <a
+              @click="append(data)">
+              Append
+            </a>
+            <a
+              @click="remove(node, data)">
+              Delete
+            </a>
+          </span>
         </span>
-      </span>
+      </template>
     </el-tree>
   </div>
 </div>
@@ -484,7 +481,6 @@ The content of tree nodes can be customized, so you can add icons or buttons as 
       }];
       return {
         data: JSON.parse(JSON.stringify(data)),
-        data: JSON.parse(JSON.stringify(data))
       }
     },
 
@@ -492,9 +488,10 @@ The content of tree nodes can be customized, so you can add icons or buttons as 
       append(data) {
         const newChild = { id: id++, label: 'testtest', children: [] };
         if (!data.children) {
-          this.$set(data, 'children', []);
+          data.children = [];
         }
         data.children.push(newChild);
+        this.data = [...this.data]
       },
 
       remove(node, data) {
@@ -502,20 +499,17 @@ The content of tree nodes can be customized, so you can add icons or buttons as 
         const children = parent.data.children || parent.data;
         const index = children.findIndex(d => d.id === data.id);
         children.splice(index, 1);
+        this.data = [...this.data]
       },
 
       renderContent(h, { node, data, store }) {
         return h("span", {
           class: "custom-tree-node"
-        }, h("span", null, node.label), h("span", null, h("el-button", {
-          size: "mini",
-          type: "text",
-          "on-click":this.append(data)
-        }, "Append"), h("el-button", {
-          size: "mini",
-          type: "text",
-          "on-click": this.remove(node, data)
-        }, "Delete")))
+        }, h("span", null, node.label), h("span", null, h("a", {
+          onClick: () => this.append(data)
+        }, "Append "), h("a", {
+          onClick: () => this.remove(node, data)
+        }, "Delete")));
       }
     }
   };
@@ -795,7 +789,7 @@ You can drag and drop Tree nodes by adding a `draggable` attribute.
 | props                 | configuration options, see the following table | object                      | —               | —       |
 | render-after-expand   | whether to render child nodes only after a parent node is expanded for the first time | boolean | — | true |
 | load                  | method for loading subtree data, only works when `lazy` is true  | function(node, resolve)     | —               | —       |
-| render-content        | render function for tree node            | Function(h, { node, data, store }        | —               | —       |
+| render-content        | render function for tree node            | Function(h, { node, data, store })        | —               | —       |
 | highlight-current     | whether current node is highlighted      | boolean                     | —               | false   |
 | default-expand-all    | whether to expand all nodes by default   | boolean                     | —               | false   |
 | expand-on-click-node  | whether to expand or collapse node when clicking on the node, if false, then expand or collapse node only when clicking on the arrow icon. | boolean | — | true |
@@ -838,8 +832,8 @@ You can drag and drop Tree nodes by adding a `draggable` attribute.
 | getHalfCheckedKeys | If the node can be selected (`show-checkbox` is `true`), it returns the currently half selected array of node's keys | - |
 | getCurrentKey   | return the highlight node's key (null if no node is highlighted) | — |
 | getCurrentNode  | return the highlight node's data (null if no node is highlighted) | — |
-| setCurrentKey   | set highlighted node by key, only works when `node-key` is assigned | (key) the node's key to be highlighted. If `null`, cancel the currently highlighted node |
-| setCurrentNode  | set highlighted node, only works when `node-key` is assigned | (node) the node to be highlighted |
+| setCurrentKey   | set highlighted node by key, only works when `node-key` is assigned | (key, shouldAutoExpandParent=true) 1. the node's key to be highlighted. If `null`, cancel the currently highlighted node 2. whether to automatically expand parent node |
+| setCurrentNode  | set highlighted node, only works when `node-key` is assigned | (node, shouldAutoExpandParent=true) 1. the node to be highlighted 2. whether to automatically expand parent node |
 | getNode         | get node by data or key | (data) the node's data or key |
 | remove          | remove a node, only works when node-key is assigned | (data) the node's data or node to be deleted |
 | append          | append a child node to a given node in the tree | (data, parentNode) 1. child node's data to be appended 2. parent node's data, key or node |
@@ -863,7 +857,7 @@ You can drag and drop Tree nodes by adding a `draggable` attribute.
 | node-drag-end  | triggers when dragging ends  | four parameters: node object corresponding to the dragging node, node object corresponding to the dragging end node (may be `undefined`), node drop type (before / after / inner), event. |
 | node-drop  | triggers after the dragging node is dropped | four parameters: node object corresponding to the dragging node, node object corresponding to the dropped node, node drop type (before / after / inner), event. |
 
-### Scoped Slot
+### Slots
 | Name | Description |
 |------|--------|
 | — | Custom content for tree nodes. The scope parameter is { node, data } |

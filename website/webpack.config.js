@@ -1,21 +1,27 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const path = require('path')
+const webpack = require('webpack')
 const { VueLoaderPlugin } = require('vue-loader')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
+
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 const isProd = process.env.NODE_ENV === 'production'
 const isPlay = !!process.env.PLAY_ENV
 
-module.exports = {
+const config = {
   mode: isProd ? 'production' : 'development',
-  devtool: isProd ? 'source-map' : 'cheap-module-eval-source-map',
-  entry: isPlay ? path.resolve(__dirname, './play.js') : path.resolve(__dirname, './entry.js'),
+  devtool: !isProd && 'cheap-module-eval-source-map',
+  entry: isPlay
+    ? path.resolve(__dirname, './play.js')
+    : path.resolve(__dirname, './entry.js'),
   output: {
     path: path.resolve(__dirname, '../website-dist'),
     publicPath: '/',
+    filename: isProd ? '[name].[hash].js' : '[name].js',
   },
-  stats: 'verbose',
   module: {
     rules: [
       {
@@ -23,25 +29,9 @@ module.exports = {
         use: 'vue-loader',
       },
       {
-        test: /\.(sass|scss|css)$/,
-        use: [
-          'style-loader',
-          'css-loader',
-          {
-            loader: 'sass-loader',
-            options: {
-              implementation: require('sass'),
-            },
-          },
-        ],
-      },
-      {
-        test: /\.ts$/,
-        loader: 'ts-loader',
-        options: {
-          appendTsSuffixTo: [/\.vue$/],
-          transpileOnly: true,
-        },
+        test: /\.(ts|js)x?$/,
+        exclude: /node_modules/,
+        loader: 'babel-loader',
       },
       {
         test: /\.md$/,
@@ -71,9 +61,9 @@ module.exports = {
     ],
   },
   resolve: {
-    extensions: ['.ts', '.js', '.vue', '.json'],
+    extensions: ['.ts', '.tsx', '.js', '.vue', '.json'],
     alias: {
-      'vue': '@vue/runtime-dom',
+      vue: 'vue/dist/vue.esm-browser.js',
       examples: path.resolve(__dirname),
     },
   },
@@ -94,4 +84,41 @@ module.exports = {
     contentBase: __dirname,
     overlay: true,
   },
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new CssMinimizerPlugin(),
+    ],
+  },
 }
+
+const cssRule = {
+  test: /\.(sass|scss|css)$/,
+  use: [
+    'css-loader',
+    {
+      loader: 'sass-loader',
+      options: {
+        implementation: require('sass'),
+      },
+    },
+  ],
+}
+
+// if (isProd) {
+config.plugins.push(
+  new MiniCssExtractPlugin({
+    filename: '[name].[contenthash].css',
+    chunkFilename: '[id].[contenthash].css',
+  }),
+  new webpack.DefinePlugin({
+    __VUE_OPTIONS_API__: JSON.stringify(true),
+    __VUE_PROD_DEVTOOLS__: JSON.stringify(false),
+  }),
+)
+cssRule.use.unshift(MiniCssExtractPlugin.loader)
+// } else {
+cssRule.use.unshift('style-loader')
+// }
+config.module.rules.push(cssRule)
+module.exports = config

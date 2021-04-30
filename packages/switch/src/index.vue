@@ -26,7 +26,10 @@
       <i v-if="inactiveIconClass" :class="[inactiveIconClass]"></i>
       <span v-if="!inactiveIconClass && inactiveText" :aria-hidden="checked">{{ inactiveText }}</span>
     </span>
-    <span ref="core" class="el-switch__core" :style="{ 'width': coreWidth + 'px' }">
+    <span ref="core" class="el-switch__core" :style="{ 'width': (width || 40) + 'px' }">
+      <div class="el-switch__action">
+        <i v-if="loading" class="el-icon-loading"></i>
+      </div>
     </span>
     <span
       v-if="activeIconClass || activeText"
@@ -39,11 +42,14 @@
 </template>
 <script lang='ts'>
 import { defineComponent, computed, onMounted, ref, inject, nextTick, watch } from 'vue'
+import { elFormKey, elFormItemKey } from '@element-plus/form'
+import { isPromise } from '@vue/shared'
+import { isBool } from '@element-plus/utils/util'
+import throwError, { warn } from '@element-plus/utils/error'
 
-// TODOS: replace these interface definition with actual ElForm interface
-interface ElForm {
-  disabled: boolean
-}
+import type { ElFormContext, ElFormItemContext } from '@element-plus/form'
+import type { PropType } from 'vue'
+
 
 type ValueType = boolean | string | number;
 
@@ -63,6 +69,8 @@ interface ISwitchProps {
   name: string
   validateEvent: boolean
   id: string
+  loading:boolean
+  beforeChange?: () => (Promise<boolean> | boolean)
 }
 
 export default defineComponent({
@@ -124,18 +132,23 @@ export default defineComponent({
       type: Boolean,
       default: true,
     },
-    id: {
-      type: String,
-      default: '',
+    id: String,
+    loading:{
+      type: Boolean,
+      default: false,
     },
+    beforeChange: Function as PropType<() => (Promise<boolean> | boolean)>,
   },
   emits: ['update:modelValue', 'change', 'input'],
   setup(props: ISwitchProps, ctx) {
-    const elForm = inject<ElForm>('elForm', {} as any)
-    const coreWidth = ref(props.width)
+    const elForm = inject(elFormKey, {} as ElFormContext)
+    const elFormItem = inject(elFormItemKey, {} as ElFormItemContext)
+
     const isModelValue = ref(props.modelValue !== false)
     const input = ref(null)
     const core = ref(null)
+
+    const scope = 'ElSwitch'
 
     watch(() => props.modelValue, () => {
       isModelValue.value = true
@@ -167,13 +180,12 @@ export default defineComponent({
       }
 
       if (props.validateEvent) {
-        // TODO: should dispatch event to parent component <el-form-item>;
-        // dispatch('ElFormItem', 'el.form.change', [this.value]);
+        elFormItem.formItemMitt?.emit('el.form.change', [actualValue.value])
       }
     })
 
     const switchDisabled = computed((): boolean => {
-      return props.disabled || (elForm || {}).disabled
+      return props.disabled || props.loading ||(elForm || {}).disabled
     })
 
     const handleChange = (): void => {
@@ -187,7 +199,34 @@ export default defineComponent({
     }
 
     const switchValue = (): void => {
-      !switchDisabled.value && handleChange()
+      if (switchDisabled.value) return
+
+      const { beforeChange } = props
+      if (!beforeChange) {
+        handleChange()
+        return
+      }
+
+      const shouldChange = beforeChange()
+
+      const isExpectType = [isPromise(shouldChange), isBool(shouldChange)].some(i => i)
+      if (!isExpectType) {
+        throwError(scope, 'beforeChange must return type `Promise<boolean>` or `boolean`')
+      }
+
+      if (isPromise(shouldChange)) {
+        shouldChange.then(result => {
+          if (result) {
+            handleChange()
+          }
+        }).catch(e => {
+          if (process.env.NODE_ENV !== 'production') {
+            warn(scope, `some error occurred: ${e}`)
+          }
+        })
+      } else if (shouldChange) {
+        handleChange()
+      }
     }
 
     const setBackgroundColor = (): void => {
@@ -195,11 +234,14 @@ export default defineComponent({
       const coreEl = core.value
       coreEl.style.borderColor = newColor
       coreEl.style.backgroundColor = newColor
+      coreEl.children[0].style.color = newColor
+    }
+
+    const focus = (): void => {
+      input.value?.focus?.()
     }
 
     onMounted(() => {
-      coreWidth.value = coreWidth.value || 40
-
       if (props.activeValue || props.inactiveValue) {
         setBackgroundColor()
       }
@@ -210,15 +252,12 @@ export default defineComponent({
     return {
       input,
       core,
-      coreWidth,
       switchDisabled,
       checked,
       handleChange,
       switchValue,
+      focus,
     }
   },
 })
 </script>
-<style scoped>
-</style>
-

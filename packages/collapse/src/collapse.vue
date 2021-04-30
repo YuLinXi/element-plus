@@ -3,46 +3,60 @@
     <slot></slot>
   </div>
 </template>
-<script lang='ts'>
-import { defineComponent, ref, watch, provide, PropType, Ref, onUnmounted } from 'vue'
-import mitt from 'mitt'
+
+<script lang="ts">
+import {
+  defineComponent,
+  ref,
+  watch,
+  provide,
+  PropType,
+  Ref,
+  onUnmounted,
+} from 'vue'
+import mitt, { Emitter } from 'mitt'
+import { UPDATE_MODEL_EVENT, CHANGE_EVENT } from '@element-plus/utils/constants'
 
 export interface CollapseProvider {
   activeNames: Ref
-  collapseMitt: mitt.Emitter
+  collapseMitt: Emitter
 }
-
 export default defineComponent({
   name: 'ElCollapse',
   props: {
     accordion: Boolean,
     modelValue: {
-      type: [Array, String, Number] as PropType<string | number | Array<string|number>>,
+      type: [Array, String, Number] as PropType<
+        string | number | Array<string | number>
+      >,
       default: () => [],
     },
   },
-  emits: ['update:modelValue'],
+  emits: [UPDATE_MODEL_EVENT, CHANGE_EVENT],
   setup(props, { emit }) {
     const activeNames = ref([].concat(props.modelValue))
-    const collapseMitt: mitt.Emitter = mitt()
+    const collapseMitt: Emitter = mitt()
 
     const setActiveNames = _activeNames => {
       activeNames.value = [].concat(_activeNames)
       const value = props.accordion ? activeNames.value[0] : activeNames.value
-      emit('update:modelValue', value)
+      emit(UPDATE_MODEL_EVENT, value)
+      emit(CHANGE_EVENT, value)
     }
 
     const handleItemClick = name => {
-      if(props.accordion) {
+      if (props.accordion) {
         setActiveNames(
           (activeNames.value[0] || activeNames.value[0] === 0) &&
-          activeNames.value[0] === name ? '' : name,
+            activeNames.value[0] === name
+            ? ''
+            : name,
         )
       } else {
         let _activeNames = activeNames.value.slice(0)
         const index = _activeNames.indexOf(name)
 
-        if(index > -1) {
+        if (index > -1) {
           _activeNames.splice(index, 1)
         } else {
           _activeNames.push(name)
@@ -51,9 +65,12 @@ export default defineComponent({
       }
     }
 
-    watch(() => props.modelValue, () => {
-      activeNames.value = [].concat(props.modelValue)
-    })
+    watch(
+      () => props.modelValue,
+      () => {
+        activeNames.value = [].concat(props.modelValue)
+      },
+    )
 
     collapseMitt.on('item-click', handleItemClick)
 

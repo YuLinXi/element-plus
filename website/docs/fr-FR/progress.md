@@ -4,7 +4,7 @@ Progress est utilisé pour afficher la progression d'une opération et informer 
 
 ### Barre de progression linéaire
 
-:::demo Utilisez l'attribut `percentage` pour indiquer le pourcentage. Cet attribut est **requis** et doit être compris entre 0 et 100. You can custom text format by setting `format`.
+:::demo Utilisez l'attribut `percentage` pour indiquer le pourcentage. Cet attribut est **requis** et doit être compris entre 0 et 100. Vous pouvez personnaliser le format du texte en définissant le `format`.
 ```html
 <el-progress :percentage="50"></el-progress>
 <el-progress :percentage="100" :format="format"></el-progress>
@@ -159,6 +159,52 @@ Vous pouvez également spécifier l'attribut `type` de `dashboard` pour utiliser
 ```
 :::
 
+### Customized content
+
+:::demo Use default slot to add customized content.
+
+```html
+<el-progress :percentage="50">
+  <el-button type="text">Content</el-button>
+</el-progress>
+<el-progress :text-inside="true" :stroke-width="20" :percentage="50" status="exception">
+  <span>Content</span>
+</el-progress>
+<el-progress type="circle" :percentage="100" status="success">
+  <el-button type="success" icon="el-icon-check" circle></el-button>
+</el-progress>
+<el-progress type="dashboard" :percentage="80">
+  <template #default="{ percentage }">
+    <span class="percentage-value">{{ percentage }}%</span>
+    <span class="percentage-label">Progressing</span>
+  </template>
+</el-progress>
+```
+:::
+
+### Indeterminate progress
+
+:::demo Use `indeterminate` attribute to set indeterminate progress, with `duration` to control the animation duration.
+
+```html
+<el-progress :percentage="50" :indeterminate="true"></el-progress>
+<el-progress :percentage="100" :format="format" :indeterminate="true"></el-progress>
+<el-progress :percentage="100" status="success" :indeterminate="true" :duration="5"></el-progress>
+<el-progress :percentage="100" status="warning" :indeterminate="true" :duration="1"></el-progress>
+<el-progress :percentage="50" status="exception" :indeterminate="true"></el-progress>
+
+<script>
+  export default {
+    methods: {
+      format(percentage) {
+        return percentage === 100 ? 'Full' : `${percentage}%`;
+      }
+    }
+  };
+</script>
+```
+:::
+
 ### Attributs
 
 | Attribut      | Description          | Type      | Valeurs acceptées       | Défaut  |
@@ -168,7 +214,15 @@ Vous pouvez également spécifier l'attribut `type` de `dashboard` pour utiliser
 | stroke-width | La largeur de la barre. | number | — | 6 |
 | text-inside | Si le pourcentage doit être à l'intérieur de la barre, ne marche que si `type` est 'line'. | boolean | — | false |
 | status | Le statut actuel de la progression. | string | success/exception/text | — |
+| indeterminate  | set indeterminate progress | boolean | - | false |
+| duration  | control the animation duration of indeterminate progress | number | - | 3 |
 | color  | La couleur de fon de la barre. Écrase `status`. | string/function/array | — | '' |
 | width | La largeur du canvas dans le cas d'une barre circulaire. | number | — | 126 |
 | show-text | Si le pourcentage doit être affiché. | boolean | — | true |
 | stroke-linecap  | circle/dashboard type shape at the end path | string | butt/round/square | round |
+| format  | Vous pouvez personnaliser le format du texte en définissant le format  | function(percentage) | — | — |
+
+### Slot
+| name | Description |
+|------|--------|
+| default | Customized content, parameter is { percentage } |

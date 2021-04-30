@@ -1,6 +1,6 @@
 <template>
   <ul
-    v-clickOutside:[_trigger]="_hide"
+    v-clickOutside:[triggerElm]="innerHide"
     :class="[size && `el-dropdown-menu--${size}`]"
     class="el-dropdown-menu"
     @mouseenter.stop="show"
@@ -10,8 +10,8 @@
   </ul>
 </template>
 <script lang='ts'>
-import { defineComponent, getCurrentInstance, onMounted, ref } from 'vue'
-import ClickOutside from '@element-plus/directives/click-outside'
+import { defineComponent, getCurrentInstance, onMounted } from 'vue'
+import { ClickOutside } from '@element-plus/directives'
 import { useDropdown, initDropdownDomEvent } from './useDropdown'
 
 export default defineComponent({
@@ -22,12 +22,13 @@ export default defineComponent({
   setup() {
     const { _elDropdownSize, elDropdown } = useDropdown()
     const size = _elDropdownSize.value
-    const _trigger = ref(null)
+
     function show() {
+      if (['click', 'contextmenu'].includes(elDropdown.trigger.value)) return
       elDropdown.show?.()
     }
     function hide() {
-      if (elDropdown.trigger.value === 'click') return
+      if (['click', 'contextmenu'].includes(elDropdown.trigger.value)) return
       _hide()
     }
     function _hide() {
@@ -36,24 +37,17 @@ export default defineComponent({
 
     onMounted(() => {
       const dropdownMenu = getCurrentInstance()
-      _trigger.value = elDropdown.triggerElm.value
-      initDropdownDomEvent(dropdownMenu, _trigger.value, elDropdown.instance)
+      initDropdownDomEvent(dropdownMenu, elDropdown.triggerElm.value, elDropdown.instance)
     })
 
     return {
       size,
       show,
       hide,
-      _trigger,
-      _hide,
+      innerHide: _hide,
+      triggerElm: elDropdown.triggerElm,
     }
   },
 })
 </script>
-<style>
-.el-dropdown-menu {
-  position: relative;
-  margin: 0;
-  box-shadow: none;
-}
-</style>
+

@@ -188,8 +188,7 @@ Les checkbox des noeuds peuvent être désactivées individuellement.
 <el-tree
   :data="data"
   :props="defaultProps"
-  show-checkbox
-  @check-change="handleCheckChange">
+  show-checkbox>
 </el-tree>
 
 <script>
@@ -423,23 +422,21 @@ Le contenu des noeuds peut être personnalisé, afin de pouvoir ajouter des icô
       node-key="id"
       default-expand-all
       :expand-on-click-node="false">
-      <span class="custom-tree-node" slot-scope="{ node, data }">
-        <span>{{ node.label }}</span>
-        <span>
-          <el-button
-            type="text"
-            size="mini"
-            @click="() => append(data)">
-            Ajouter
-          </el-button>
-          <el-button
-            type="text"
-            size="mini"
-            @click="() => remove(node, data)">
-            Supprimer
-          </el-button>
+      <template #default="{ node, data }">
+        <span class="custom-tree-node">
+          <span>{{ node.label }}</span>
+          <span>
+            <a
+              @click="append(data)">
+              Append
+            </a>
+            <a
+              @click="remove(node, data)">
+              Delete
+            </a>
+          </span>
         </span>
-      </span>
+      </template>
     </el-tree>
   </div>
 </div>
@@ -486,7 +483,6 @@ Le contenu des noeuds peut être personnalisé, afin de pouvoir ajouter des icô
       }];
       return {
         data: JSON.parse(JSON.stringify(data)),
-        data: JSON.parse(JSON.stringify(data))
       }
     },
 
@@ -494,9 +490,10 @@ Le contenu des noeuds peut être personnalisé, afin de pouvoir ajouter des icô
       append(data) {
         const newChild = { id: id++, label: 'testtest', children: [] };
         if (!data.children) {
-          this.$set(data, 'children', []);
+          data.children = []
         }
         data.children.push(newChild);
+        this.data = [...this.data]
       },
 
       remove(node, data) {
@@ -504,20 +501,17 @@ Le contenu des noeuds peut être personnalisé, afin de pouvoir ajouter des icô
         const children = parent.data.children || parent.data;
         const index = children.findIndex(d => d.id === data.id);
         children.splice(index, 1);
+        this.data = [...this.data]
       },
 
       renderContent(h, { node, data, store }) {
         return h("span", {
           class: "custom-tree-node"
-        }, h("span", null, node.label), h("span", null, h("el-button", {
-          size: "mini",
-          type: "text",
-          "on-click":this.append(data)
-        }, "Append"), h("el-button", {
-          size: "mini",
-          type: "text",
-          "on-click": this.remove(node, data)
-        }, "Delete")))
+        }, h("span", null, node.label), h("span", null, h("a", {
+          onClick: () => this.append(data)
+        }, "Append "), h("a", {
+          onClick: () => this.remove(node, data)
+        }, "Delete")));
       }
     }
   };
@@ -845,8 +839,8 @@ Vous pouvez déplacer les noeuds par drag'n drop en ajoutant l'attribut `draggab
 | getHalfCheckedKeys | Si le noeud peut être sélectionné (`show-checkbox` est `true`), retourne les clés de la moitié des noeuds sélectionnés. | - |
 | getCurrentKey   | retourne la clé du noeud actuellement en valeur (`null` si aucun noeud n'est en valeur). | — |
 | getCurrentNode  | retourne les données du noeud actuellement en valeur (`null` si aucun noeud n'est en valeur). | — |
-| setCurrentKey   | Met un noeud en valeur par sa clé, ne marche que si `node_key` est assigné. | (key) la clé du noeud. Si `null`, annule la sélection actuelle. |
-| setCurrentNode  | Met un noeud en valeur, ne marche que si `node_key` est assigné. | (node) le noeud. |
+| setCurrentKey   | Met un noeud en valeur par sa clé, ne marche que si `node_key` est assigné. | (key, shouldAutoExpandParent=true) 1. la clé du noeud. Si `null`, annule la sélection actuelle. 2. whether to automatically expand parent node |
+| setCurrentNode  | Met un noeud en valeur, ne marche que si `node_key` est assigné. | (node, shouldAutoExpandParent=true) 1. le noeud. 2. whether to automatically expand parent node |
 | getNode         | Retourne le noeud grâce à sa clé ou ses données. | (data) la clé ou les données du noeud. |
 | remove          | Supprime un noeud, ne marche que si node-key est assigné. | (data) le noeud ou ses données à supprimer. |
 | append          | Ajoute un noeud à un autre noeud. | (data, parentNode) 1. les données du noeud à ajouter 2. les données du parent, clé ou données. |

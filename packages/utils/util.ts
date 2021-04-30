@@ -1,14 +1,22 @@
+import type { Ref } from 'vue'
+import { getCurrentInstance } from 'vue'
+
+import { camelize, capitalize, extend, hasOwn, hyphenate, isArray, isObject, isString, looseEqual, toRawType } from '@vue/shared'
+
 import isServer from './isServer'
-import { isObject, capitalize, hyphenate, looseEqual, extend, camelize } from '@vue/shared'
-import { isEmpty, castArray, isEqual } from 'lodash'
-
 import type { AnyFunction } from './types'
+import { warn } from './error'
 
-const { hasOwnProperty } = Object.prototype
-
-export function hasOwn(obj: any, key: string): boolean {
-  return hasOwnProperty.call(obj, key)
+// type polyfill for compat isIE method
+declare global {
+  interface Document {
+    documentMode?: any
+  }
 }
+
+export const SCOPE = 'Util'
+
+export type PartialCSSStyleDeclaration = Partial<Pick<CSSStyleDeclaration, 'transform' | 'transition' | 'animation'>>
 
 export function toObject<T>(arr: Array<T>): Record<string, T> {
   const res = {}
@@ -42,9 +50,14 @@ export function getPropByPath(obj: any, path: string, strict: boolean): {
   for (i; i < keyArr.length - 1; i++) {
     if (!tempObj && !strict) break
     const key = keyArr[i]
-    tempObj = tempObj?.[key]
-    if (!tempObj && strict) {
-      throw new Error('please transfer a valid prop path to form item!')
+
+    if (key in tempObj) {
+      tempObj = tempObj[key]
+    } else {
+      if (strict) {
+        throw new Error('please transfer a valid prop path to form item!')
+      }
+      break
     }
   }
   return {
@@ -69,24 +82,28 @@ export const escapeRegexpString = (value = ''): string =>
 // Use native Array.find, Array.findIndex instead
 
 // coerce truthy value to array
-export const coerceTruthyValueToArray = castArray
-
-export const isIE = function(): boolean {
-  return !isServer && !isNaN(Number(document.DOCUMENT_NODE))
+export const coerceTruthyValueToArray = arr => {
+  if (!arr && arr !== 0) {
+    return []
+  }
+  return Array.isArray(arr) ? arr : [arr]
 }
 
-export const isEdge = function(): boolean {
+export const isIE = function (): boolean {
+  return !isServer && !isNaN(Number(document.documentMode))
+}
+
+export const isEdge = function (): boolean {
   return !isServer && navigator.userAgent.indexOf('Edge') > -1
 }
 
-export const isFirefox = function(): boolean {
-  return (
-    !isServer && !!window.navigator.userAgent.match(/firefox/i)
-  )
+export const isFirefox = function (): boolean {
+  return !isServer && !!window.navigator.userAgent.match(/firefox/i)
 }
 
-export const autoprefixer = function(style: CSSStyleDeclaration): CSSStyleDeclaration {
-  if (typeof style !== 'object') return style
+export const autoprefixer = function (
+  style: PartialCSSStyleDeclaration,
+): PartialCSSStyleDeclaration {
   const rules = ['transform', 'transition', 'animation']
   const prefixes = ['ms-', 'webkit-']
   rules.forEach(rule => {
@@ -102,20 +119,27 @@ export const autoprefixer = function(style: CSSStyleDeclaration): CSSStyleDeclar
 
 export const kebabCase = hyphenate
 
-// reexport from lodash
+// reexport from lodash & vue shared
 export {
-  isEmpty,
-  isEqual,
+  hasOwn,
+  // isEmpty,
+  // isEqual,
   isObject,
+  isArray,
+  isString,
   capitalize,
   camelize,
   looseEqual,
   extend,
 }
 
+export const isBool = (val: unknown) => typeof val === 'boolean'
+export const isNumber = (val: unknown) => typeof val === 'number'
+export const isHTMLElement = (val: unknown) => toRawType(val).startsWith('HTML')
+
 export function rafThrottle<T extends AnyFunction<any>>(fn: T): AnyFunction<void> {
   let locked = false
-  return function(...args: any[]) {
+  return function (...args: any[]) {
     if (locked) return
     locked = true
     window.requestAnimationFrame(() => {
@@ -125,7 +149,10 @@ export function rafThrottle<T extends AnyFunction<any>>(fn: T): AnyFunction<void
   }
 }
 
-export const objToArray = castArray
+export const clearTimer = (timer: Ref<TimeoutHandle>) => {
+  clearTimeout(timer.value)
+  timer.value = null
+}
 
 /**
  * Generating a random int in range (0, max - 1)
@@ -135,4 +162,77 @@ export function getRandomInt(max: number) {
   return Math.floor(Math.random() * Math.floor(max))
 }
 
+export function entries<T>(obj: Hash<T>): [string, T][] {
+  return Object
+    .keys(obj)
+    .map((key: string) => ([key, obj[key]]))
+}
+
+export function isUndefined(val: any): val is undefined {
+  return val === void 0
+}
+
 export { isVNode } from 'vue'
+
+export function useGlobalConfig() {
+  const vm: any = getCurrentInstance()
+  if ('$ELEMENT' in vm.proxy) {
+    return vm.proxy.$ELEMENT
+  }
+  return {}
+}
+
+export const arrayFindIndex = function <T = any>(
+  arr: Array<T>,
+  pred: (args: T) => boolean,
+): number {
+  return arr.findIndex(pred)
+}
+
+export const arrayFind = function <T = any>(
+  arr: Array<T>,
+  pred: (args: T) => boolean,
+): any {
+  return arr.find(pred)
+}
+
+export function isEmpty(val: unknown) {
+  if (
+    !val && val !== 0 ||
+    isArray(val) && !val.length ||
+    isObject(val) && !Object.keys(val).length
+  ) return true
+
+  return false
+}
+
+export function arrayFlat(arr: unknown[]) {
+  return arr.reduce((acm: unknown[], item) => {
+    const val = Array.isArray(item) ? arrayFlat(item) : item
+    return acm.concat(val)
+  }, [])
+}
+
+export function deduplicate<T>(arr: T[]) {
+  return Array.from(new Set(arr))
+}
+
+/**
+ * Unwraps refed value
+ * @param ref Refed value
+ */
+export function $<T>(ref: Ref<T>) {
+  return ref.value
+}
+
+export function addUnit(value: string | number) {
+  if (isString(value)) {
+    return value
+  } else if (isNumber(value)) {
+    return value + 'px'
+  }
+  if (process.env.NODE_ENV === 'development') {
+    warn(SCOPE, 'binding value must be a string or number')
+  }
+  return ''
+}

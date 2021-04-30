@@ -7,12 +7,12 @@
             <!-- logo -->
             <slot>
               <img
-                src="../assets/images/element-logo.svg"
+                src="../assets/images/element-plus-logo.svg"
                 alt="element-logo"
                 class="nav-logo"
               >
               <img
-                src="../assets/images/element-logo-small.svg"
+                src="../assets/images/element-plus-logo-small.svg"
                 alt="element-logo"
                 class="nav-logo-small"
               >
@@ -93,18 +93,20 @@
                 {{ displayedLang }}
                 <i class="el-icon-arrow-down el-icon--right"></i>
               </span>
-              <el-dropdown-menu
-                class="nav-dropdown-list"
-                @input="handleLangDropdownToggle"
-              >
-                <el-dropdown-item
-                  v-for="(value, key) in langs"
-                  :key="key"
-                  @click="switchLang(key)"
+              <template #dropdown>
+                <el-dropdown-menu
+                  class="nav-dropdown-list"
+                  @input="handleLangDropdownToggle"
                 >
-                  {{ value }}
-                </el-dropdown-item>
-              </el-dropdown-menu>
+                  <el-dropdown-item
+                    v-for="(value, key) in langs"
+                    :key="key"
+                    @click="switchLang(key)"
+                  >
+                    {{ value }}
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
             </el-dropdown>
           </li>
         </ul>
@@ -114,6 +116,7 @@
 </template>
 <script>
 import AlgoliaSearch from './search.vue'
+import { Language } from '../enums/language'
 import compoLang from '../i18n/component.json'
 
 const version = '1.0.0' // element version
@@ -131,17 +134,18 @@ export default {
       verDropdownVisible: true,
       langDropdownVisible: true,
       langs: {
-        'zh-CN': '中文',
-        'en-US': 'English',
-        'es': 'Español',
-        'fr-FR': 'Français',
+        [Language.CN]: '中文',
+        [Language.EN]: 'English',
+        [Language.ES]: 'Español',
+        [Language.FR]: 'Français',
+        [Language.JP]: '日本語',
       },
     }
   },
 
   computed: {
     lang() {
-      return this.$route.path.split('/')[1] || 'zh-CN'
+      return this.$route.path.split('/')[1] || Language.CN
     },
     displayedLang() {
       return this.langs[this.lang] || '中文'
@@ -154,18 +158,18 @@ export default {
     },
   },
   created() {
-    const xhr = new XMLHttpRequest()
-    xhr.onreadystatechange = () => {
-      if (xhr.readyState === 4 && xhr.status === 200) {
-        const versions = JSON.parse(xhr.responseText)
-        this.versions = Object.keys(versions).reduce((prev, next) => {
-          prev[next] = versions[next]
-          return prev
-        }, {})
-      }
-    }
-    xhr.open('GET', '/versions.json')
-    xhr.send()
+    // const xhr = new XMLHttpRequest()
+    // xhr.onreadystatechange = () => {
+    //   if (xhr.readyState === 4 && xhr.status === 200) {
+    //     const versions = JSON.parse(xhr.responseText)
+    //     this.versions = Object.keys(versions).reduce((prev, next) => {
+    //       prev[next] = versions[next]
+    //       return prev
+    //     }, {})
+    //   }
+    // }
+    // xhr.open('GET', '/versions.json')
+    // xhr.send()
   },
   methods: {
     switchVersion(version) {
@@ -273,12 +277,17 @@ export default {
       }
     }
 
+    .nav-logo {
+      width: 160px
+    }
+
     .nav-logo,
     .nav-logo-small {
       vertical-align: sub;
     }
 
     .nav-logo-small {
+      width: 44px;
       display: none;
     }
 
@@ -391,6 +400,14 @@ export default {
     width: auto;
   }
 
+  @media (max-width: 1000px) {
+    .header {
+      .nav-theme-switch, .nav-algolia-search {
+        display: none;
+      }
+    }
+  }
+
   @media (max-width: 850px) {
     .header {
       .nav-logo {
@@ -410,9 +427,6 @@ export default {
         a {
           padding: 0 5px;
         }
-      }
-      .nav-theme-switch, .nav-algolia-search {
-        display: none;
       }
     }
   }

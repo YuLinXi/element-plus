@@ -1,7 +1,7 @@
-import isServer from '@element-plus/utils/isServer'
 import { on } from '@element-plus/utils/dom'
+import isServer from '@element-plus/utils/isServer'
+import type { ComponentPublicInstance, DirectiveBinding, ObjectDirective } from 'vue'
 
-import type { DirectiveBinding, ObjectDirective, ComponentPublicInstance } from 'vue'
 
 type DocumentHandler = <T extends MouseEvent>(mouseup: T, mousedown: T) => void;
 
@@ -42,7 +42,7 @@ function createDocumentHandler(
       popperRef: Nullable<HTMLElement>
     }>).popperRef
     const mouseUpTarget = mouseup.target as Node
-    const mouseDownTarget = mousedown.target as Node
+    const mouseDownTarget = mousedown?.target as Node
     const isBound = !binding || !binding.instance
     const isTargetExists = !mouseUpTarget || !mouseDownTarget
     const isContainedByEl = el.contains(mouseUpTarget) || el.contains(mouseDownTarget)

@@ -33,6 +33,28 @@ Used for rating
 ```
 :::
 
+### With allow-half
+:::demo Add attribute `allow-half` Half star allowed
+```html
+
+<div class="block">
+  <el-rate  v-model="value"  allow-half />
+</div>
+
+
+<script>
+import { defineComponent, ref } from 'vue'
+  export default {
+    setup() {
+      return {
+        value: ref(null)
+      }
+    }
+  }
+</script>
+```
+:::
+
 ### With text
 
 Using text to indicate rating score
@@ -130,7 +152,7 @@ Read-only Rate is for displaying rating score. Half star is supported.
 | show-text | whether to display texts | boolean | — | false |
 | show-score | whether to display current score. show-score and show-text cannot be true at the same time | boolean | — | false |
 | text-color | color of texts | string | — | #1F2D3D |
-| texts | text array | array | — | ['极差', '失望', '一般', '满意', '惊喜'] |
+| texts | text array | array | — | ['Extremely bad','Disappointed','Fair','Satisfied','Surprise'] |
 | score-template | score template | string | — | {value} |
 
 ### Events

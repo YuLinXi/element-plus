@@ -46,10 +46,10 @@ import {
 } from 'vue'
 import { isObject, isArray } from '@vue/shared'
 import { hasClass } from '@element-plus/utils/dom'
+import { EVENT_CODE } from '@element-plus/utils/aria'
+import { elFormKey } from '@element-plus/form'
 
-interface ElForm {
-  disabled: boolean
-}
+import type { ElFormContext } from '@element-plus/form'
 
 export default defineComponent({
   name: 'ElRate',
@@ -125,10 +125,11 @@ export default defineComponent({
   },
   emits: ['update:modelValue', 'change'],
   setup(props, { emit }) {
+    const elForm = inject(elFormKey, {} as ElFormContext)
+
     const currentValue = ref(props.modelValue)
 
-    const elForm = inject<ElForm>('elForm')
-    const rateDisabled = computed(() => props.disabled || (elForm || {}).disabled)
+    const rateDisabled = computed(() => props.disabled || elForm.disabled)
 
     const text = computed(() => {
       let result = ''
@@ -191,9 +192,9 @@ export default defineComponent({
     const classes = computed(() => {
       let result = Array(props.max)
       let threshold = currentValue.value
-      if (props.allowHalf && currentValue.value !== Math.floor(currentValue.value)) {
-        threshold--
-      }
+      // if (props.allowHalf && currentValue.value !== Math.floor(currentValue.value)) {
+      //   threshold--
+      // }
       result.fill(activeClass.value, 0, threshold)
       result.fill(voidClass.value, threshold, props.max)
       return result
@@ -240,8 +241,8 @@ export default defineComponent({
         return
       }
       let _currentValue = currentValue.value
-      const keyCode = e.keyCode
-      if (keyCode === 38 || keyCode === 39) { // left / down
+      const code = e.code
+      if (code === EVENT_CODE.up || code === EVENT_CODE.right) {
         if (props.allowHalf) {
           _currentValue += 0.5
         } else {
@@ -249,7 +250,7 @@ export default defineComponent({
         }
         e.stopPropagation()
         e.preventDefault()
-      } else if (keyCode === 37 || keyCode === 40) {
+      } else if (code === EVENT_CODE.left || code === EVENT_CODE.down) {
         if (props.allowHalf) {
           _currentValue -= 0.5
         } else {
@@ -260,8 +261,8 @@ export default defineComponent({
       }
       _currentValue = _currentValue < 0 ? 0 : _currentValue
       _currentValue = _currentValue > props.max ? props.max : _currentValue
-      emit('update:modelValue', currentValue)
-      emit('change', currentValue)
+      emit('update:modelValue', _currentValue)
+      emit('change', _currentValue)
       return _currentValue
     }
 

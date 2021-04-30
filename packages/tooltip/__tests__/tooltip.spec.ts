@@ -1,6 +1,6 @@
 import { h, nextTick } from 'vue'
 import { mount } from '@vue/test-utils'
-import Tooltip from '../src/index.vue'
+import Tooltip from '../src/index'
 
 import type { VNode } from 'vue'
 
@@ -12,6 +12,7 @@ const _mount = (props: any = {}, content: string | VNode = '') => mount(Tooltip,
     content: () => content,
   },
   props,
+  attachTo: 'body',
 })
 
 const selector = '.el-popper'
@@ -29,7 +30,7 @@ describe('Tooltip.vue', () => {
       manual: true,
       modelValue: false,
     }, AXIOM)
-    // since VTU does not provide any functionality for testing teleporting components
+    // since VTU does not provide any functionality for testing teleported components
     expect(document.querySelector(selector).getAttribute('style')).toContain('display: none')
 
     await wrapper.setProps({

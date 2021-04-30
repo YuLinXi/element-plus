@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import { nextTick, h } from 'vue'
+import { h, nextTick } from 'vue'
 import Slider from '../src/index.vue'
 
 
@@ -51,7 +51,7 @@ describe('Slider', () => {
         }
       },
     })
-    const slider: any = wrapper.findComponent({ name:'ElSliderButton' })
+    const slider: any = wrapper.findComponent({ name: 'ElSliderButton' })
     slider.vm.handleMouseEnter()
     expect(slider.vm.tooltipVisible).toBeTruthy()
     slider.vm.handleMouseLeave()
@@ -62,7 +62,7 @@ describe('Slider', () => {
     const wrapper = mount({
       template: `
         <div>
-          <slider v-model="value" :show-tooltip="false">
+          <slider ref="slider" v-model="value" :show-tooltip="false">
           </slider>
         </div>
       `,
@@ -73,10 +73,12 @@ describe('Slider', () => {
         }
       },
     })
-    expect(wrapper.findComponent({ name:'ElPopper' }).exists()).toBeFalsy()
+    const slider = wrapper.vm.$refs.slider as any
+    const tooltip = slider.$refs.firstButton.$refs.tooltip
+    expect(tooltip.disabled).toBe(true)
   })
 
-  it('format tooltip', async() => {
+  it('format tooltip', async () => {
     const wrapper = mount({
       template: `
         <div>
@@ -96,7 +98,7 @@ describe('Slider', () => {
         },
       },
     })
-    const slider:any = wrapper.findComponent({ name:'ElSliderButton' })
+    const slider: any = wrapper.findComponent({ name: 'ElSliderButton' })
     nextTick().then(() => {
       expect(slider.vm.formatValue).toBe('$0')
     })
@@ -122,8 +124,8 @@ describe('Slider', () => {
     const mockClientWidth = jest
       .spyOn(wrapper.find('.el-slider__runway').element, 'clientWidth', 'get')
       .mockImplementation(() => 200)
-    const slider = wrapper.findComponent({ name:'ElSliderButton' })
-    slider.trigger('mousedown',{ clientX: 0 })
+    const slider = wrapper.findComponent({ name: 'ElSliderButton' })
+    slider.trigger('mousedown', { clientX: 0 })
     const mousemove = document.createEvent('MouseEvent')
     mousemove.initMouseEvent('mousemove', true, true, window, 1, 100, 0, 100, 0, false, false, true, false, 0, null)
     window.dispatchEvent(mousemove)
@@ -139,9 +141,9 @@ describe('Slider', () => {
         expect(wrapper.vm.value === 0).toBeTruthy()
 
         const mockClientHeight = jest
-          .spyOn(wrapper.find('.el-slider__runway').element, 'clientHeight','get')
+          .spyOn(wrapper.find('.el-slider__runway').element, 'clientHeight', 'get')
           .mockImplementation(() => 200)
-        slider.trigger('mousedown',{ clientY: 0 })
+        slider.trigger('mousedown', { clientY: 0 })
         const mousemove = document.createEvent('MouseEvent')
         mousemove.initMouseEvent('mousemove', true, true, window, 1, 0, -100, 0, -100, false, false, true, false, 0, null)
         window.dispatchEvent(mousemove)
@@ -171,7 +173,7 @@ describe('Slider', () => {
         }
       },
     })
-    const slider:any = wrapper.findComponent({ name:'ElSliderButton' })
+    const slider: any = wrapper.findComponent({ name: 'ElSliderButton' })
     slider.vm.onRightKeyDown()
     setTimeout(() => {
       expect(wrapper.vm.value).toBe(1)
@@ -201,11 +203,11 @@ describe('Slider', () => {
       attachTo: document.body,
     })
     const mockClientWidth = jest
-      .spyOn(wrapper.find('.el-slider__runway').element, 'clientWidth','get')
+      .spyOn(wrapper.find('.el-slider__runway').element, 'clientWidth', 'get')
       .mockImplementation(() => 200)
-    const slider:any = wrapper.findComponent({ name:'ElSliderButton' })
+    const slider: any = wrapper.findComponent({ name: 'ElSliderButton' })
     nextTick().then(() => {
-      slider.trigger('mousedown',{ clientX: 0 })
+      slider.trigger('mousedown', { clientX: 0 })
       const mousemove = document.createEvent('MouseEvent')
       mousemove.initMouseEvent('mousemove', true, true, window, 1, 100, 0, 100, 0, false, false, true, false, 0, null)
       window.dispatchEvent(mousemove)
@@ -235,7 +237,7 @@ describe('Slider', () => {
         }
       },
     })
-    const slider:any = wrapper.findComponent({ name:'ElSlider' })
+    const slider: any = wrapper.findComponent({ name: 'ElSlider' })
     setTimeout(() => {
       slider.vm.onSliderClick({ clientX: 100 })
       setTimeout(() => {
@@ -266,16 +268,16 @@ describe('Slider', () => {
         },
       },
     })
-    const slider:any = wrapper.findComponent({ name:'ElSlider' })
+    const slider: any = wrapper.findComponent({ name: 'ElSlider' })
     const mockRectLeft = jest
-      .spyOn(wrapper.find('.el-slider__runway').element,'getBoundingClientRect')
+      .spyOn(wrapper.find('.el-slider__runway').element, 'getBoundingClientRect')
       .mockImplementation(() => {
         return {
           left: 0,
         } as DOMRect
       })
     const mockClientWidth = jest
-      .spyOn(wrapper.find('.el-slider__runway').element, 'clientWidth','get')
+      .spyOn(wrapper.find('.el-slider__runway').element, 'clientWidth', 'get')
       .mockImplementation(() => 200)
     setTimeout(() => {
       expect(wrapper.vm.data).toBe(0)
@@ -287,6 +289,48 @@ describe('Slider', () => {
         done()
       }, 10)
     }, 10)
+  })
+
+  it('input event', async done => {
+    const wrapper = mount({
+      template: `
+        <div style="width: 200px">
+          <slider v-model="value" @input="onInput">
+          </slider>
+        </div>
+      `,
+      components: { Slider },
+      data() {
+        return {
+          data: 0,
+          value: 0,
+        }
+      },
+      methods: {
+        onInput(val) {
+          this.data = val
+        },
+      },
+    })
+    const slider: any = wrapper.findComponent({ name: 'ElSlider' })
+    const mockRectLeft = jest
+      .spyOn(wrapper.find('.el-slider__runway').element, 'getBoundingClientRect')
+      .mockImplementation(() => {
+        return {
+          left: 0,
+        } as DOMRect
+      })
+    const mockClientWidth = jest
+      .spyOn(wrapper.find('.el-slider__runway').element, 'clientWidth', 'get')
+      .mockImplementation(() => 200)
+    await nextTick()
+    expect(wrapper.vm.data).toBe(0)
+    slider.vm.onSliderClick({ clientX: 100 })
+    await nextTick()
+    expect(wrapper.vm.data === 50).toBeTruthy()
+    mockRectLeft.mockRestore()
+    mockClientWidth.mockRestore()
+    done()
   })
 
   it('disabled', done => {
@@ -306,7 +350,7 @@ describe('Slider', () => {
     const mockClientWidth = jest
       .spyOn(wrapper.find('.el-slider__runway').element, 'clientWidth', 'get')
       .mockImplementation(() => 200)
-    const slider:any = wrapper.findComponent({ name:'ElSliderButton' })
+    const slider: any = wrapper.findComponent({ name: 'ElSliderButton' })
     slider.vm.onButtonDown({ clientX: 0 })
     const mousemove = document.createEvent('MouseEvent')
     mousemove.initMouseEvent('mousemove', true, true, window, 1, 50, 0, 50, 0, false, false, true, false, 0, null)
@@ -321,32 +365,27 @@ describe('Slider', () => {
     }, 10)
   })
 
-  // TODO: waiting for InputNumber refactored.
-
-  // it('show input', done => {
-  //   const wrapper = mount({
-  //     template: `
-  //       <div>
-  //         <slider v-model="value" show-input></slider>
-  //       </div>
-  //     `,
-  //     components: { Slider },
-  //     data() {
-  //       return {
-  //         value: 0,
-  //       }
-  //     },
-  //   })
-  //   setTimeout(() => {
-  //     wrapper.find('.el-input-number').trigger('keyup')
-  //     const inputNumber = wrapper.getComponent('ElInputNumber')
-  //     inputNumber.vm.setCurrentValue(40)
-  //     setTimeout(() => {
-  //       expect(wrapper.vm.value).toBe(40)
-  //       done()
-  //     }, 10)
-  //   }, 10)
-  // })
+  it('show input', done => {
+    const wrapper = mount({
+      template: `
+        <div>
+          <slider v-model="value" show-input></slider>
+        </div>
+      `,
+      components: { Slider },
+      data() {
+        return {
+          value: 0,
+        }
+      },
+    })
+    const increaseButton = wrapper.find('.el-input-number__increase')
+    increaseButton.trigger('mousedown')
+    setTimeout(() => {
+      expect(wrapper.vm.value > 0).toBeTruthy()
+      done()
+    }, 200)
+  })
 
   it('show stops', () => {
     const wrapper = mount(Slider, {
@@ -386,7 +425,7 @@ describe('Slider', () => {
     const mockClientHeight = jest
       .spyOn(wrapper.find('.el-slider__runway').element, 'clientHeight', 'get')
       .mockImplementation(() => 200)
-    const slider:any = wrapper.getComponent({ name: 'ElSlider' })
+    const slider: any = wrapper.getComponent({ name: 'ElSlider' })
     setTimeout(() => {
       slider.vm.onSliderClick({ clientY: 100 })
       setTimeout(() => {
@@ -398,14 +437,32 @@ describe('Slider', () => {
     }, 10)
   })
 
+  it('rerender with min and show-input', async () => {
+    const wrapper = mount({
+      template: '<slider v-if="show" v-model="value" :min="10" show-input/>',
+      components: { Slider },
+      data() {
+        return {
+          show: false,
+          value: 30,
+        }
+      },
+      mounted() {
+        this.show = true
+      },
+    })
+    await nextTick()
+    expect(wrapper.vm.value).toEqual(30)
+  })
+
   describe('range', () => {
     it('basic ranged slider', () => {
       const wrapper = mount({
         template: `
-        <div>
-          <slider v-model="value" range></slider>
-        </div>
-      `,
+          <div>
+            <slider v-model="value" range></slider>
+          </div>
+        `,
         components: { Slider },
         data() {
           return {
@@ -413,7 +470,7 @@ describe('Slider', () => {
           }
         },
       })
-      const sliders = wrapper.findAllComponents({ name:'ElSliderButton' })
+      const sliders = wrapper.findAllComponents({ name: 'ElSliderButton' })
       expect(sliders.length).toBe(2)
     })
 
@@ -470,9 +527,9 @@ describe('Slider', () => {
           } as DOMRect
         })
       const mockClientWidth = jest
-        .spyOn(wrapper.find('.el-slider__runway').element, 'clientWidth','get')
+        .spyOn(wrapper.find('.el-slider__runway').element, 'clientWidth', 'get')
         .mockImplementation(() => 200)
-      const slider:any = wrapper.getComponent({ name: 'ElSlider' })
+      const slider: any = wrapper.getComponent({ name: 'ElSlider' })
       setTimeout(() => {
         slider.vm.onSliderClick({ clientX: 100 })
         setTimeout(() => {
@@ -526,7 +583,8 @@ describe('Slider', () => {
               v-model="value"
               range
               :step="10"
-              show-stops></slider>
+              show-stops
+            ></slider>
           </div>
         `,
         components: { Slider },
@@ -543,7 +601,7 @@ describe('Slider', () => {
       }, 10)
     })
 
-    it('marks', async() => {
+    it('marks', async () => {
       const wrapper = mount({
         template: `
           <div>
@@ -553,7 +611,8 @@ describe('Slider', () => {
               :step="10"
               :marks="marks"
               :min="20"
-              show-stops></slider>
+              show-stops
+            ></slider>
           </div>
         `,
         components: { Slider },

@@ -11,10 +11,12 @@
         'el-input-group--prepend': $slots.prepend,
         'el-input--prefix': $slots.prefix || prefixIcon,
         'el-input--suffix': $slots.suffix || suffixIcon || clearable || showPassword
-      }
+      },
+      $attrs.class
     ]"
-    @mouseenter="hovering = true"
-    @mouseleave="hovering = false"
+    :style="$attrs.style"
+    @mouseenter="onMouseEnter"
+    @mouseleave="onMouseLeave"
   >
     <template v-if="type !== 'textarea'">
       <!-- 前置元素 -->
@@ -25,13 +27,14 @@
         v-if="type !== 'textarea'"
         ref="input"
         class="el-input__inner"
-        v-bind="$attrs"
+        v-bind="attrs"
         :type="showPassword ? (passwordVisible ? 'text': 'password') : type"
         :disabled="inputDisabled"
         :readonly="readonly"
         :autocomplete="autocomplete"
         :tabindex="tabindex"
         :aria-label="label"
+        :placeholder="placeholder"
         @compositionstart="handleCompositionStart"
         @compositionupdate="handleCompositionUpdate"
         @compositionend="handleCompositionEnd"
@@ -39,6 +42,7 @@
         @focus="handleFocus"
         @blur="handleBlur"
         @change="handleChange"
+        @keydown="handleKeydown"
       >
       <!-- 前置内容 -->
       <span v-if="$slots.prefix || prefixIcon" class="el-input__prefix">
@@ -79,13 +83,14 @@
       v-else
       ref="textarea"
       class="el-textarea__inner"
-      v-bind="$attrs"
+      v-bind="attrs"
       :tabindex="tabindex"
       :disabled="inputDisabled"
       :readonly="readonly"
       :autocomplete="autocomplete"
       :style="textareaStyle"
       :aria-label="label"
+      :placeholder="placeholder"
       @compositionstart="handleCompositionStart"
       @compositionupdate="handleCompositionUpdate"
       @compositionend="handleCompositionEnd"
@@ -93,6 +98,7 @@
       @focus="handleFocus"
       @blur="handleBlur"
       @change="handleChange"
+      @keydown="handleKeydown"
     >
     </textarea>
     <span v-if="isWordLimitVisible && type === 'textarea'" class="el-input__count">{{ textLength }}/{{ upperLimit }}</span>
@@ -112,30 +118,22 @@ import {
   onMounted,
   onUpdated,
 } from 'vue'
+import { useAttrs } from '@element-plus/hooks'
 import { UPDATE_MODEL_EVENT, VALIDATE_STATE_MAP } from '@element-plus/utils/constants'
-import { isObject } from '@element-plus/utils/util'
+import { isObject, useGlobalConfig } from '@element-plus/utils/util'
 import isServer from '@element-plus/utils/isServer'
 import { isKorean } from '@element-plus/utils/isDef'
+import { isValidComponentSize } from '@element-plus/utils/validators'
+import { elFormKey, elFormItemKey } from '@element-plus/form'
 import calcTextareaHeight from './calcTextareaHeight'
-import type { PropType } from 'vue'
 
-// TODOS: replace these interface definition with actual ElForm interface
-interface ElForm {
-  disabled: boolean
-  statusIcon: string
-}
-interface ElFormItem {
-  elFormItemSize: number
-  validateState: string
-}
+import type { PropType } from 'vue'
+import type { ElFormContext, ElFormItemContext } from '@element-plus/form'
+
 type AutosizeProp = {
   minRows?: number
   maxRows?: number
 } | boolean
-
-const ELEMENT: {
-  size?: number
-} = {}
 
 const PENDANT_MAP = {
   suffix: 'append',
@@ -144,6 +142,8 @@ const PENDANT_MAP = {
 
 export default defineComponent({
   name: 'ElInput',
+
+  inheritAttrs: false,
 
   props: {
     modelValue: {
@@ -155,8 +155,8 @@ export default defineComponent({
       default: 'text',
     },
     size: {
-      type: String as PropType<'large' | 'medium' | 'small' | 'mini'>,
-      validator: (val: string) => ['large', 'medium', 'small', 'mini'].includes(val),
+      type: String as PropType<ComponentSize>,
+      validator: isValidComponentSize,
     },
     resize: {
       type: String as PropType<'none' | 'both' | 'horizontal' | 'vertical'>,
@@ -170,6 +170,9 @@ export default defineComponent({
       type: String,
       default: 'off',
       validator: (val: string) => ['on', 'off'].includes(val),
+    },
+    placeholder: {
+      type: String,
     },
     form: {
       type: String,
@@ -205,11 +208,9 @@ export default defineComponent({
     },
     label: {
       type: String,
-      default: '',
     },
     tabindex: {
       type: String,
-      default: '',
     },
     validateEvent: {
       type: Boolean,
@@ -217,13 +218,16 @@ export default defineComponent({
     },
   },
 
-  emits: [UPDATE_MODEL_EVENT, 'change', 'focus', 'blur', 'clear'],
+  emits: [UPDATE_MODEL_EVENT, 'input', 'change', 'focus', 'blur', 'clear',
+    'mouseleave', 'mouseenter', 'keydown'],
 
   setup(props, ctx) {
     const instance = getCurrentInstance()
+    const attrs = useAttrs()
+    const $ELEMENT = useGlobalConfig()
 
-    const elForm = inject<ElForm>('elForm', {} as any)
-    const elFormItem = inject<ElFormItem>('elFormItem', {} as any)
+    const elForm = inject(elFormKey, {} as ElFormContext)
+    const elFormItem = inject(elFormItemKey, {} as ElFormItemContext)
 
     const input = ref(null)
     const textarea = ref (null)
@@ -234,17 +238,16 @@ export default defineComponent({
     const _textareaCalcStyle = shallowRef({})
 
     const inputOrTextarea = computed(() => input.value || textarea.value)
-    const inputSize = computed(() => props.size || elFormItem.elFormItemSize || ELEMENT?.size)
-    const needStatusIcon = computed(() => elForm ? elForm.statusIcon : false)
-    // TODO: adjust when ElForm done
+    const inputSize = computed(() => props.size || elFormItem.size || $ELEMENT.size)
+    const needStatusIcon = computed(() => elForm.statusIcon)
     const validateState = computed(() => elFormItem.validateState || '')
     const validateIcon = computed(() => VALIDATE_STATE_MAP[validateState.value])
     const textareaStyle = computed(() => ({
       ..._textareaCalcStyle.value,
       resize: props.resize,
     }))
-    const inputDisabled = computed(() => props.disabled || elForm?.disabled)
-    const nativeInputValue = computed(() => String(props.modelValue))
+    const inputDisabled = computed(() => props.disabled || elForm.disabled)
+    const nativeInputValue = computed(() => (props.modelValue === null || props.modelValue === undefined) ? '' : String(props.modelValue))
     const upperLimit = computed(() => ctx.attrs.maxlength)
     const showClear = computed(() => {
       return props.clearable &&
@@ -319,15 +322,18 @@ export default defineComponent({
     }
 
     const handleInput = event => {
+      const { value } = event.target
+
       // should not emit input during composition
       // see: https://github.com/ElemeFE/element/issues/10516
       if (isComposing.value) return
 
       // hack for https://github.com/ElemeFE/element/issues/8548
       // should remove the following line when we don't support IE
-      if (event.target.value === nativeInputValue.value) return
+      if (value === nativeInputValue.value) return
 
-      ctx.emit(UPDATE_MODEL_EVENT, event.target.value)
+      ctx.emit(UPDATE_MODEL_EVENT, value)
+      ctx.emit('input', value)
 
       // ensure native input value is controlled
       // see: https://github.com/ElemeFE/element/issues/12850
@@ -339,7 +345,10 @@ export default defineComponent({
     }
 
     const focus = () => {
-      inputOrTextarea.value.focus()
+      // see: https://github.com/ElemeFE/element/issues/18573
+      nextTick(() => {
+        inputOrTextarea.value.focus()
+      })
     }
 
     const blur = () => {
@@ -354,9 +363,9 @@ export default defineComponent({
     const handleBlur = event => {
       focused.value = false
       ctx.emit('blur', event)
-      // if (props.validateEvent) {
-      //   this.dispatch('ElFormItem', 'el.form.blur', [props.modelValue])
-      // }
+      if (props.validateEvent) {
+        elFormItem.formItemMitt?.emit('el.form.blur', [props.modelValue])
+      }
     }
 
     const select = () => {
@@ -400,12 +409,11 @@ export default defineComponent({
         (validateState.value && needStatusIcon.value)
     }
 
-    watch(() => props.modelValue, () => {
+    watch(() => props.modelValue, val => {
       nextTick(resizeTextarea)
-      // TODO: should dispatch event to parent component <el-form-item>;
-      // if (props.validateEvent) {
-      //   dispatch('ElFormItem', 'el.form.change', [val])
-      // }
+      if (props.validateEvent) {
+        elFormItem.formItemMitt?.emit('el.form.change', [val])
+      }
     })
 
     // native input value is set explicitly
@@ -436,13 +444,29 @@ export default defineComponent({
       nextTick(updateIconOffset)
     })
 
+    const onMouseLeave = e => {
+      hovering.value = false
+      ctx.emit('mouseleave', e)
+    }
+
+    const onMouseEnter = e => {
+      hovering.value = true
+      ctx.emit('mouseenter', e)
+    }
+
+    const handleKeydown = e => {
+      ctx.emit('keydown', e)
+    }
+
     return {
       input,
       textarea,
+      attrs,
       inputSize,
       validateState,
       validateIcon,
       textareaStyle,
+      resizeTextarea,
       inputDisabled,
       showClear,
       showPwdVisible,
@@ -452,6 +476,7 @@ export default defineComponent({
       hovering,
       inputExceed,
       passwordVisible,
+      inputOrTextarea,
       handleInput,
       handleChange,
       handleFocus,
@@ -465,6 +490,9 @@ export default defineComponent({
       focus,
       blur,
       getSuffixVisible,
+      onMouseLeave,
+      onMouseEnter,
+      handleKeydown,
     }
   },
 })

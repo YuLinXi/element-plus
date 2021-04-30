@@ -27,7 +27,6 @@ NAME=$NORMALIZED_NAME
 
 mkdir -p "$DIRNAME"
 mkdir -p "$DIRNAME/src"
-mkdir -p "$DIRNAME/doc"
 mkdir -p "$DIRNAME/__tests__"
 
 cat > $DIRNAME/src/index.vue <<EOF
@@ -46,16 +45,19 @@ export default defineComponent({
   },
 })
 </script>
-<style scoped>
+<style>
 </style>
 EOF
 
 cat <<EOF >"$DIRNAME/index.ts"
 import { App } from 'vue'
 import ${NAME} from './src/index.vue'
-export default (app: App): void => {
+
+${NAME}.install = (app: App): void => {
   app.component(${NAME}.name, ${NAME})
 }
+
+export default ${NAME}
 EOF
 
 cat > $DIRNAME/package.json <<EOF
@@ -65,7 +67,7 @@ cat > $DIRNAME/package.json <<EOF
   "main": "dist/index.js",
   "license": "MIT",
   "peerDependencies": {
-    "vue": "^3.0.0-rc.9"
+    "vue": "^3.0.9"
   },
   "devDependencies": {
     "@vue/test-utils": "^2.0.0-beta.3"
@@ -89,13 +91,4 @@ describe('$NAME.vue', () => {
     expect(wrapper.text()).toEqual(AXIOM)
   })
 })
-EOF
-
-cat <<EOF >"$DIRNAME/doc/index.stories.ts"
-import El${NAME} from '../index'
-
-export default {
-  title: '${NAME}',
-}
-
 EOF

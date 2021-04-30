@@ -26,12 +26,9 @@ Display date.
 :::demo Customize what is displayed in the calendar cell by setting `scoped-slot` named `dateCell`. In `scoped-slot` you can get the date (the date of the current cell), data (including the type, isSelected, day attribute). For details, please refer to the API documentation below.
 ```html
 <el-calendar>
-  <!-- Use 2.5 slot syntax. If you use Vue 2.6, please use new slot syntax-->
-  <template
-    slot="dateCell"
-    slot-scope="{date, data}">
+  <template #dateCell="{data}">
     <p :class="data.isSelected ? 'is-selected' : ''">
-      {{ data.day.split('-').slice(1).join('-') }} {{ data.isSelected ? '✔️' : ''}}
+      {{ data.day.split('-').slice(1).join('-') }} {{ data.isSelected ? '✔️' : '' }}
     </p>
   </template>
 </el-calendar>
@@ -47,20 +44,24 @@ Display date.
 
 :::demo Set the `range` attribute to specify the display range of the calendar. Start time must be Monday, end time must be Sunday, and the time span cannot exceed two months.
 ```html
-<el-calendar :range="['2019-03-04', '2019-03-24']">
+<el-calendar :range="[new Date(2019, 2, 4), new Date(2019, 2, 24)]">
 </el-calendar>
 ```
 :::
 
+### Localization
+
+The default locale of is English, if you need to use other languages, please check [Internationalization](#/en-US/component/i18n)
+
+Note, date time locale (month name, first day of the week ...) are also configed in localization.
+
 ### Attributes
 | Attribute       | Description        | Type      | Accepted Values       | Default  |
 |-----------------|------------------- |---------- |---------------------- |--------- |
-| value / v-model | binding value      | Date/string/number | —            | —        |
-| range           | time range, including start time and end time. Start time must be start day of week, end time must be end day of week, the time span cannot exceed two months. | Array  | —  | —  |
-| first-day-of-week | fisrt day of week| Number    | 1 to 7                |  1       |
+| value / v-model | binding value      | Date | —            | —        |
+| range           | time range, including start time and end time. Start time must be start day of week, end time must be end day of week, the time span cannot exceed two months. | [Date]Array  | —  | —  |
 
 ### dateCell scoped slot 参数
 | Attribute       | Description   | Type      | Accepted Values       | Default  |
 |-----------------|-------------- |---------- |---------------------- |--------- |
-| date            | date the cell represents  | Date      | —                     | —        |
-| data            | { type, isSelected, day}. `type` indicates which month the date belongs, optional values are prev-month, current-month, next-month; `isSelected` indicates whether the date is selected; `day` is the formatted date in the format yyyy-MM-dd    | Object      | —           | —      |
+| data            | { type, isSelected, day, date }. `type` indicates which month the date belongs, optional values are prev-month, current-month, next-month; `isSelected` indicates whether the date is selected; `day` is the formatted date in the format YYYY-MM-DD; `date` is date the cell represents    | Object      | —           | —      |

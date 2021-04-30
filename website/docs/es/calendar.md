@@ -27,12 +27,9 @@ Muestra fechas.
 
 ```html
 <el-calendar>
-  <!-- Use 2.5 slot syntax. If you use Vue 2.6, please use new slot syntax-->
-  <template
-    slot="dateCell"
-    slot-scope="{date, data}">
+  <template #dateCell="{data}">
     <p :class="data.isSelected ? 'is-selected' : ''">
-      {{ data.day.split('-').slice(1).join('-') }} {{ data.isSelected ? '✔️' : ''}}
+      {{ data.day.split('-').slice(1).join('-') }} {{ data.isSelected ? '✔️' : '' }}
     </p>
   </template>
 </el-calendar>
@@ -48,21 +45,25 @@ Muestra fechas.
 
 :::demo Defina el atributo `range` para especificar el rango de visualización del calendario. El tiempo de inicio debe ser el lunes, el tiempo de finalización debe ser el domingo y el período no puede exceder los dos meses.
 ```html
-<el-calendar :range="['2019-03-04', '2019-03-24']">
+<el-calendar :range="[new Date(2019, 2, 4), new Date(2019, 2, 24)]">
 </el-calendar>
 ```
 :::
 
+### Localization
+
+The default locale of is English, if you need to use other languages, please check [Internationalization](#/es/component/i18n)
+
+Note, date time locale (month name, first day of the week ...) are also configed in localization.
+
 ### Atributos
 | Atributo        | Descripción        | Tipo      | Valores aceptados     | Por defecto |
 |-----------------|------------------- |---------- |---------------------- |------------ |
-| value / v-model | valor vinculante   | Date/string/number | —            | —           |
-| range           | rango de tiempo, incluyendo el tiempo de inicio y el tiempo final. Start time must be start day of week, end time must be end day of week, the time span cannot exceed two months | Array     | —           | —      |
-| first-day-of-week | fisrt day of week| Number    | 1 to 7                |  1          |
+| value / v-model | valor vinculante   | Date | —            | —           |
+| range           | rango de tiempo, incluyendo el tiempo de inicio y el tiempo final. Start time must be start day of week, end time must be end day of week, the time span cannot exceed two months | [Date]Array     | —           | —      |
 
 ### dateCell scoped slot
 | Atributo      | Descripción | Tipo   | Valores aceptados | Por defecto |
 |-----------------|-------------- |---------- |---------------------- |--------- |
-| date            | fecha que la celda representa | Date      | —                     | —        |
-| data            | { type, isSelected, day}. `type` indica el mes al que pertenece la fecha, los valores opcionales son mes anterior, mes actual, mes siguiente; `isSelected` indica si la fecha está seleccionada; `day` es la fecha formateada en el formato yyyy-MM-dd | Object      | —           | —      |
+| data            | { type, isSelected, day, date}. `type` indica el mes al que pertenece la fecha, los valores opcionales son mes anterior, mes actual, mes siguiente; `isSelected` indica si la fecha está seleccionada; `day` es la fecha formateada en el formato yyyy-MM-dd; `date` es la fecha que la celda representa | Object      | —           | —      |
 

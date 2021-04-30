@@ -157,6 +157,52 @@ Puede utilizar el atributo `color` para establecer el color de la barra de progr
 ```
 :::
 
+### Customized content
+
+:::demo Use default slot to add customized content.
+
+```html
+<el-progress :percentage="50">
+  <el-button type="text">Content</el-button>
+</el-progress>
+<el-progress :text-inside="true" :stroke-width="20" :percentage="50" status="exception">
+  <span>Content</span>
+</el-progress>
+<el-progress type="circle" :percentage="100" status="success">
+  <el-button type="success" icon="el-icon-check" circle></el-button>
+</el-progress>
+<el-progress type="dashboard" :percentage="80">
+  <template #default="{ percentage }">
+    <span class="percentage-value">{{ percentage }}%</span>
+    <span class="percentage-label">Progressing</span>
+  </template>
+</el-progress>
+```
+:::
+
+### Indeterminate progress
+
+:::demo Use `indeterminate` attribute to set indeterminate progress, with `duration` to control the animation duration.
+
+```html
+<el-progress :percentage="50" :indeterminate="true"></el-progress>
+<el-progress :percentage="100" :format="format" :indeterminate="true"></el-progress>
+<el-progress :percentage="100" status="success" :indeterminate="true" :duration="5"></el-progress>
+<el-progress :percentage="100" status="warning" :indeterminate="true" :duration="1"></el-progress>
+<el-progress :percentage="50" status="exception" :indeterminate="true"></el-progress>
+
+<script>
+  export default {
+    methods: {
+      format(percentage) {
+        return percentage === 100 ? 'Full' : `${percentage}%`;
+      }
+    }
+  };
+</script>
+```
+:::
+
 ### Atributos
 | Atributo     | Descripción                              | Tipo    | Valores aceptado  | Por defecto |
 | ------------ | ---------------------------------------- | ------- | ----------------- | ----------- |
@@ -165,7 +211,15 @@ Puede utilizar el atributo `color` para establecer el color de la barra de progr
 | stroke-width | ancho de la barra de progreso            | number  | —                 | 6           |
 | text-inside  | mostrar el porcentaje dentro de la barra de progreso, solo funciona cuando `type` es 'line' | boolean | —                 | false       |
 | status       | estado actual de la barra de progreso    | string  | success/exception/warning | —   |
+| indeterminate  | set indeterminate progress | boolean | - | false |
+| duration  | control the animation duration of indeterminate progress  | number | - | 3 |
 | color        | color de fondo de la barra de progreso. Sobreescribe la propiedad `status` | string/function/array | — | '' |
 | width        | ancho del canvas que contiene la barra de progreso circula | number  | —                 | 126         |
 | show-text    | mostrar porcentaje                       | boolean | —                 | true        |
 | stroke-linecap  | circle/dashboard type shape at the end path | string | butt/round/square | round |
+| format  | personalizar el formato de texto estableciendo format  | function(percentage) | — | — |
+
+### Slot
+| name | Description |
+|------|--------|
+| default | Customized content, parameter is { percentage } |

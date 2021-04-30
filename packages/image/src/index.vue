@@ -1,5 +1,9 @@
 <template>
-  <div ref="container" class="el-image">
+  <div
+    ref="container"
+    :class="['el-image', $attrs.class]"
+    :style="$attrs.style"
+  >
     <slot v-if="loading" name="placeholder">
       <div class="el-image__placeholder"></div>
     </slot>
@@ -9,33 +13,38 @@
     <img
       v-else
       class="el-image__inner"
-      v-bind="$attrs"
+      v-bind="attrs"
       :src="src"
       :style="imageStyle"
       :class="{ 'el-image__inner--center': alignCenter, 'el-image__preview': preview }"
       @click="clickHandler"
     >
-    <template v-if="preview">
-      <image-viewer
-        v-if="showViewer"
-        :z-index="zIndex"
-        :initial-index="imageIndex"
-        :on-close="closeViewer"
-        :url-list="previewSrcList"
-      />
-    </template>
+    <teleport to="body" :disabled="!appendToBody">
+      <template v-if="preview">
+        <image-viewer
+          v-if="showViewer"
+          :z-index="zIndex"
+          :initial-index="imageIndex"
+          :url-list="previewSrcList"
+          :hide-on-click-modal="hideOnClickModal"
+          @close="closeViewer"
+        />
+      </template>
+    </teleport>
   </div>
 </template>
 
 <script lang='ts'>
 
-import { defineComponent, computed, ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { defineComponent, computed, ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { isString } from '@vue/shared'
 import throttle from 'lodash/throttle'
+import { useAttrs } from '@element-plus/hooks'
 import isServer from '@element-plus/utils/isServer'
 import { on, off, getScrollContainer, isInContainer } from '@element-plus/utils/dom'
 import { t } from '@element-plus/locale'
-import ImageViewer from './image-viewer'
+import ImageViewer from '@element-plus/image-viewer'
+import type { PropType } from 'vue'
 
 const isSupportObjectFit = () => document.documentElement.style.objectFit !== undefined
 const isHtmlEle = e => e && e.nodeType === 1
@@ -55,7 +64,16 @@ export default defineComponent({
   components: {
     ImageViewer,
   },
+  inheritAttrs: false,
   props: {
+    appendToBody: {
+      type: Boolean,
+      default: false,
+    },
+    hideOnClickModal: {
+      type: Boolean,
+      default: false,
+    },
     src: {
       type: String,
       default: '',
@@ -73,8 +91,8 @@ export default defineComponent({
       default: null,
     },
     previewSrcList: {
-      type: Array,
-      default: () => [],
+      type: Array as PropType<string[]>,
+      default: () => [] as string[],
     },
     zIndex: {
       type: Number,
@@ -82,15 +100,15 @@ export default defineComponent({
     },
   },
   emits: ['error'],
-  setup(props, { emit, attrs }) {
+  setup(props, { emit }) {
     // init here
+    const attrs = useAttrs()
     const hasLoadError = ref(false)
     const loading = ref(true)
-    const imgWidth = ref(false)
-    const imgHeight = ref(false)
+    const imgWidth = ref(0)
+    const imgHeight = ref(0)
     const showViewer = ref(false)
     const container = ref<HTMLElement | null>(null)
-    const show = ref(props.lazy)
 
     let _scrollContainer = null
     let _lazyLoadHandler = null
@@ -136,7 +154,8 @@ export default defineComponent({
       } = container.value
       if (!imageWidth || !imageHeight || !containerWidth || !containerHeight) return {}
 
-      const vertical = imageWidth / imageHeight < 1
+      const imageAspectRatio = imageWidth / imageHeight
+      const containerAspectRatio = containerWidth / containerHeight
 
       if (fit === ObjectFit.SCALE_DOWN) {
         const isSmaller = imageWidth < containerWidth && imageHeight < containerHeight
@@ -147,9 +166,9 @@ export default defineComponent({
         case ObjectFit.NONE:
           return { width: 'auto', height: 'auto' }
         case ObjectFit.CONTAIN:
-          return vertical ? { width: 'auto' } : { height: 'auto' }
+          return (imageAspectRatio < containerAspectRatio) ? { width: 'auto' } : { height: 'auto' }
         case ObjectFit.COVER:
-          return vertical ? { height: 'auto' } : { width: 'auto' }
+          return (imageAspectRatio < containerAspectRatio) ? { height: 'auto' } : { width: 'auto' }
         default:
           return {}
       }
@@ -157,6 +176,8 @@ export default defineComponent({
 
     const loadImage = () => {
       if (isServer) return
+
+      const attributes = attrs.value
 
       // reset status
       loading.value = true
@@ -168,15 +189,17 @@ export default defineComponent({
 
       // bind html attrs
       // so it can behave consistently
-      Object.keys(attrs)
+      Object.keys(attributes)
         .forEach(key => {
-          const value = attrs[key]
+          // avoid onload to be overwritten
+          if (key.toLowerCase() === 'onload') return
+          const value = attributes[key]
           img.setAttribute(key, value)
         })
       img.src = props.src
     }
 
-    function handleLoad(e: Event, img: Any) {
+    function handleLoad(e: Event, img: HTMLImageElement) {
       imgWidth.value = img.width
       imgHeight.value = img.height
       loading.value = false
@@ -239,12 +262,12 @@ export default defineComponent({
     }
 
     watch(() => props.src, () => {
-      show.value && loadImage()
+      loadImage()
     })
 
     onMounted(() => {
       if (props.lazy) {
-        setTimeout(() => addLazyLoadListener(), 0)
+        nextTick(addLazyLoadListener)
       } else {
         loadImage()
       }
@@ -255,6 +278,7 @@ export default defineComponent({
     })
 
     return {
+      attrs,
       loading,
       hasLoadError,
       showViewer,
@@ -267,11 +291,9 @@ export default defineComponent({
       clickHandler,
       closeViewer,
       container,
+      handleError,
       t,
     }
   },
 })
 </script>
-
-<style>
-</style>

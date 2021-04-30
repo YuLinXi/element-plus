@@ -1,5 +1,15 @@
 <p align="center">
-  <img width="300px" src="https://user-images.githubusercontent.com/10731096/91267529-259f3680-e7a6-11ea-9a60-3286f750de01.png">
+  <img width="300px" src="https://user-images.githubusercontent.com/10731096/95823103-9ce15780-0d5f-11eb-8010-1bd1b5910d4f.png">
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.org/package/element-plus">
+    <img src="https://img.shields.io/npm/v/element-plus.svg">
+  </a>
+  <a href="https://npmcharts.com/compare/element-plus?minimal=true">
+    <img src="http://img.shields.io/npm/dm/element-plus.svg">
+  </a>
+  <br>
 </p>
 
 <p align="center">Element Plus - A Vue.js 3.0 UI library</p>
@@ -7,11 +17,42 @@
 * 💪 Vue 3.0 Composition API
 * 🔥 Written in TypeScript
 
+## Status: Beta
+
 This project is still under heavy development. Feel free to join us and make your first pull request.
+
+[![Edit element-plus](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/element-plus-ncxnt?fontsize=14&hidenavigation=1&theme=dark)
+
+<br/>
+<p align="center">
+  <b>Special thanks to the generous sponsorship by:</b>
+</p>
+<br/>
+<table align="center" cellspacing="0" cellpadding="0">
+  <tbody>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://www.duohui.cn/?utm_source=element&utm_medium=web&utm_campaign=element-index" target="_blank">
+          <img width="150px" src="https://user-images.githubusercontent.com/10731096/100414179-11741980-30b4-11eb-9ee3-4d0a30d4e21d.png">
+        </a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://bit.dev/?from=element-ui" target="_blank">
+          <img width="150px" src="https://user-images.githubusercontent.com/10095631/41342907-e44e7196-6f2f-11e8-92f2-47702dc8f059.png">
+        </a>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 ---
 
-Join our [Discord](https://discord.link/ElementPlus) to start communicating with everybody <a href="https://discord.link/ElementPlus" target="_blank" rel="noreferrer noopener" align="center"> ![Discord](https://discord.com/api/guilds/746641026239954954/widget.png?style=shield)</a>
+## Documentation
+You can find for more details, API, and other docs on [https://element-plus.org](https://element-plus.org/)
+
+国内[加速镜像站点](https://element-plus.gitee.io/)
+
+Join our [Discord](https://discord.link/ElementPlus) to start communicating with everybody.
 
 ## Bootstrap project
 With command
@@ -20,13 +61,18 @@ $ yarn bootstrap
 ```
 the project will install all dependencies and run `lerna bootstrap` to initialize the project
 
-## Storybook preview
+## Website preview
 With command
 ```bash
-$ yarn storybook
+$ yarn website-dev
 ```
-the project will launch `@storybook` client for you to preview all existing component
+the project will launch website for you to preview all existing component
 
+You can also use this command to start a blank page to debug
+```bash
+$ yarn website-dev:play
+//source file: ./website/play/index.vue
+```
 ## Component migration process
 1. Convert the item in https://github.com/element-plus/element-plus/projects/1 to an issue
 2. Assign yourself to the issue

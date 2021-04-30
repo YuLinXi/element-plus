@@ -6,7 +6,7 @@ Utilizado para mostrar retroalimentación después de una actividad. La diferenc
 
 Se muestra en la parte superior de la pagina y desaparece después de 3 segundos.
 
-:::demo La configuración del componente Message es muy similar al del componente notification, así que parte de las opciones no serán explicadas en detalle aquí. Puedes consultar la tabla de opciones en la parte inferior combinada con la documentación del componente notification para comprenderla. Element a registrado un método `$message` para poder invocarlo. Message puede tomar una cadena o un Vnode como parámetro, y lo mostrara como el cuerpo principal.
+:::demo La configuración del componente Message es muy similar al del componente notification, así que parte de las opciones no serán explicadas en detalle aquí. Puedes consultar la tabla de opciones en la parte inferior combinada con la documentación del componente notification para comprenderla. Element Plus a registrado un método `$message` para poder invocarlo. Message puede tomar una cadena o un Vnode como parámetro, y lo mostrara como el cuerpo principal.
 
 ```html
 <template>
@@ -15,14 +15,15 @@ Se muestra en la parte superior de la pagina y desaparece después de 3 segundos
 </template>
 
 <script>
+  import { h } from 'vue';
+
   export default {
     methods: {
       open() {
         this.$message('This is a message.');
       },
-      
+
       openVn() {
-        const h = this.$createElement;
         this.$message({
           message: h('p', null, [
             h('span', null, 'Message can be '),
@@ -186,17 +187,15 @@ Aunque la propiedad `message` soporta cadenas HTML, realizar arbitrariamente ren
 
 ### Métodos Globales
 
-Element ha agregado un método global llamado `$message` para Vue.prototype. Entonces en una instancia de vue puede llamar a `Message` como lo hicimos en esta pagina.
+Element Plus ha agregado un método global llamado `$message` para `app.config.globalProperties`. Entonces en una instancia de vue puede llamar a `Message` como lo hicimos en esta pagina.
 
 ### Importación local
 
-Import `Message`:
-
 ```javascript
-import { Message } from 'element-ui';
+import { ElMessage } from 'element-plus';
 ```
 
-En este caso debería llamar al método `Message(options)`. También se han registrado métodos para los diferentes tipos, e.g. `Message.success(options)`. Puede llamar al método `Message.closeAll()` para cerrar manualmente todas las instancias.
+En este caso debería llamar al método `ElMessage(options)`. También se han registrado métodos para los diferentes tipos, e.g. `ElMessage.success(options)`. Puede llamar al método `ElMessage.closeAll()` para cerrar manualmente todas las instancias.
 
 ### Options
 | Atributo                 | Descripcion                              | Tipo           | Valores permitidos         | Por defecto |

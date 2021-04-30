@@ -87,7 +87,7 @@ Buttons without border and background.
 
 Use icons to add more meaning to Button. You can use icon alone to save some space, or use it with text.
 
-:::demo Use the `icon` attribute to add icon. You can find the icon list in Element icon component. Adding icons to the right side of the text is achievable with an `<i>` tag. Custom icons can be used as well.
+:::demo Use the `icon` attribute to add icon. You can find the icon list in Element Plus icon component. Adding icons to the right side of the text is achievable with an `<i>` tag. Custom icons can be used as well.
 
 ```html
 <el-button type="primary" icon="el-icon-edit"></el-button>
@@ -151,7 +151,7 @@ Besides default size, Button component provides three additional sizes for you t
 :::
 
 ### Attributes
-| Attribute      | Description    | Type      | Accepted values       | Default   |
+| Attribute      | Description    | Type      | Accepted Values       | Default   |
 |---------- |-------- |---------- |-------------  |-------- |
 | size     | button size   | string  |   medium / small / mini            |    —     |
 | type     | button type   | string    |   primary / success / warning / danger / info / text |     —    |
@@ -163,3 +163,9 @@ Besides default size, Button component provides three additional sizes for you t
 | icon  | icon class name | string   |  —  |  —  |
 | autofocus  | same as native button's `autofocus` | boolean   |  —  |  false  |
 | native-type | same as native button's `type` | string | button / submit / reset | button |
+
+### Button-Group Slots
+
+| Name | Description |
+| ------ | ------------------ |
+| default  | customize button group content |

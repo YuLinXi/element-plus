@@ -159,6 +159,52 @@ You also can specify `type` attribute to `dashboard` to use dashboard progress b
 ```
 :::
 
+### Customized content
+
+:::demo Use default slot to add customized content.
+
+```html
+<el-progress :percentage="50">
+  <el-button type="text">Content</el-button>
+</el-progress>
+<el-progress :text-inside="true" :stroke-width="20" :percentage="50" status="exception">
+  <span>Content</span>
+</el-progress>
+<el-progress type="circle" :percentage="100" status="success">
+  <el-button type="success" icon="el-icon-check" circle></el-button>
+</el-progress>
+<el-progress type="dashboard" :percentage="80">
+  <template #default="{ percentage }">
+    <span class="percentage-value">{{ percentage }}%</span>
+    <span class="percentage-label">Progressing</span>
+  </template>
+</el-progress>
+```
+:::
+
+### Indeterminate progress
+
+:::demo Use `indeterminate` attribute to set indeterminate progress, with `duration` to control the animation duration.
+
+```html
+<el-progress :percentage="50" :indeterminate="true"></el-progress>
+<el-progress :percentage="100" :format="format" :indeterminate="true"></el-progress>
+<el-progress :percentage="100" status="success" :indeterminate="true" :duration="5"></el-progress>
+<el-progress :percentage="100" status="warning" :indeterminate="true" :duration="1"></el-progress>
+<el-progress :percentage="50" status="exception" :indeterminate="true"></el-progress>
+
+<script>
+  export default {
+    methods: {
+      format(percentage) {
+        return percentage === 100 ? 'Full' : `${percentage}%`;
+      }
+    }
+  };
+</script>
+```
+:::
+
 ### Attributes
 | Attribute      | Description          | Type      | Accepted Values       | Default  |
 | --- | ---- | ---- | ---- | ---- |
@@ -167,7 +213,15 @@ You also can specify `type` attribute to `dashboard` to use dashboard progress b
 | stroke-width | the width of progress bar | number | — | 6 |
 | text-inside | whether to place the percentage inside progress bar, only works when `type` is 'line' | boolean | — | false |
 | status | the current status of progress bar | string | success/exception/warning | — |
+| indeterminate  | set indeterminate progress | boolean | - | false |
+| duration  | control the animation duration of indeterminate progress | number | - | 3 |
 | color  | background color of progress bar. Overrides `status` prop | string/function/array | — | '' |
 | width | the canvas width of circle progress bar | number | — | 126 |
 | show-text | whether to show percentage | boolean | — | true |
 | stroke-linecap  | circle/dashboard type shape at the end path | string | butt/round/square | round |
+| format  | custom text format  | function(percentage) | — | — |
+
+### Slots
+| Name | Description |
+|------|--------|
+| default | Customized content, parameter is { percentage } |

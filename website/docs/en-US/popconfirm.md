@@ -1,4 +1,4 @@
-## Popconfirm 
+## Popconfirm
 
 A simple confirmation dialog of an element click action.
 
@@ -12,8 +12,10 @@ Popconfirm is similar to Popover. So for some duplicated attributes, please refe
 <el-popconfirm
   title="Are you sure to delete this?"
 >
-  <el-button slot="reference">Delete</el-button>
-</el-popconfirm>
+<template #reference>
+  <el-button>Delete</el-button>
+  </template>
+  </el-popconfirm>
 </template>
 ````
 :::
@@ -30,7 +32,9 @@ You can customise Popconfirm like:
   iconColor="red"
   title="Are you sure to delete this?"
 >
-  <el-button slot="reference">Delete</el-button>
+<template #reference>
+  <el-button>Delete</el-button>
+  </template>
 </el-popconfirm>
 </template>
 ```
@@ -48,7 +52,7 @@ You can customise Popconfirm like:
 |  iconColor              | Icon color | String | — | #f90 |
 |  hideIcon              | is hide Icon | Boolean | — | false |
 
-### Slot
+### Slots
 | Name | Description |
 |--- | ---|
 | reference | HTML element that triggers Popconfirm |
@@ -56,5 +60,5 @@ You can customise Popconfirm like:
 ### Events
 | Event Name | Description | Parameters |
 |---------|--------|---------|
-| onConfirm | triggers when click confirm button | — |
-| onCancel | triggers when click cancel button | — |
+| confirm | triggers when click confirm button | — |
+| cancel | triggers when click cancel button | — |

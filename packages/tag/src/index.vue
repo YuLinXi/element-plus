@@ -30,19 +30,11 @@
 
 <script lang='ts'>
 import { computed, defineComponent } from 'vue'
-const ELEMENT: {
-  size?: number
-} = {}
+import { useGlobalConfig } from '@element-plus/utils/util'
+import { isValidComponentSize } from '@element-plus/utils/validators'
 
-interface ITagProps {
-  closable: boolean
-    type: string
-    hit: boolean
-    disableTransitions: boolean
-    color: string
-    size: string
-    effect: string
-}
+import type { PropType } from 'vue'
+
 export default defineComponent({
   name: 'ElTag',
   props: {
@@ -58,8 +50,8 @@ export default defineComponent({
       default: '',
     },
     size: {
-      type: String,
-      default: '',
+      type: String as PropType<ComponentSize>,
+      validator: isValidComponentSize,
     },
     effect: {
       type: String,
@@ -69,19 +61,19 @@ export default defineComponent({
       },
     },
   },
-  emits: ['close'],
+  emits: ['close','click'],
   setup(props, ctx) {
-    // computed
+    const ELEMENT = useGlobalConfig()
+
     const tagSize = computed(() => {
-      // todo ctx.$ELEMENT
-      return props.size || (ELEMENT || {}).size
+      return props.size || ELEMENT.size
     })
     const classes = computed(() => {
       const { type, hit, effect } = props
       return [
         'el-tag',
         type ? `el-tag--${type}` : '',
-        'tagSize' ? `el-tag--${tagSize.value}` : '',
+        tagSize.value ? `el-tag--${tagSize.value}` : '',
         effect ? `el-tag--${effect}` : '',
         hit && 'is-hit',
       ]
@@ -94,7 +86,7 @@ export default defineComponent({
     }
 
     const handleClick = event => {
-      ctx.emit('close', event)
+      ctx.emit('click', event)
     }
 
     return {
